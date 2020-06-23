@@ -11,11 +11,14 @@ namespace ChemiClean.Repositories
 {
     public interface IRepository
     {
-        public List<DataSheets> GetAllDataSheets();
-        public bool UpdateURLStatus(int dataSheetId, string url, bool status);
+        public List<DataSheetViewModel> GetAllDataSheets();
+        public bool UpdateURLStatus(int dataSheetId, string url, UrlState status);
         public bool StoreFile(int dataSheetId, string localURL, byte[] hashValue);
-        public bool IsHashExist(byte[] hashValue);
+        public byte[] getHashValue(int dataSheetId);
         public DataSheets getDataSheet(int dataSheetId);
+
+
+        //-------------------------Not Mandatory--------------------------------------------
 
         public List<Suppliers> GetAllSuppliers();
         public List<Products> GetSupplierProducts(int supplierId);

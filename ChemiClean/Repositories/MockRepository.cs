@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 
 namespace ChemiClean.Repositories
@@ -14,6 +15,7 @@ namespace ChemiClean.Repositories
 
         public MockRepository()
         {
+            var dummyData = MD5.Create().ComputeHash(new byte[] {80});
             suppliers = new List<Suppliers>() {
                 new Suppliers() { SupplierId=1, SupplierName="supplier 1"},
                 new Suppliers() { SupplierId=2, SupplierName="supplier 2"},
@@ -25,15 +27,29 @@ namespace ChemiClean.Repositories
             };
             dataSheets = new List<DataSheets>()
             {
-                new DataSheets(){DataSheetId=1, ProductId=1, SupplierId=1, DataSheetUrl="https://www.imaginary.Notfound.pdf" },
+                new DataSheets(){DataSheetId=1, ProductId=1, SupplierId=1, DataSheetUrl="https://www.imaginary.Notfound.pdf", HashValue=dummyData },
                 new DataSheets(){DataSheetId=2, ProductId=2, SupplierId=2, DataSheetUrl="http://www.flamol.dk/Flamol%20B.pdf" },
             };
         }
 
 
-        public List<DataSheets> GetAllDataSheets()
+        public List<DataSheetViewModel> GetAllDataSheets()
         {
-            return dataSheets.ToList();
+            List<DataSheetViewModel> viewModel = new List<DataSheetViewModel>();
+            foreach (var ds in dataSheets)
+            {
+                viewModel.Add(new DataSheetViewModel()
+                {
+                    DataSheetId = ds.DataSheetId,
+                    ProductName = products.Where(p=> p.ProductId == ds.ProductId).Select(p=>p.ProductName).FirstOrDefault(),
+                    SupplierName = suppliers.Where(s=> s.SupplierId== ds.SupplierId).Select(s=>s.SupplierName).FirstOrDefault(),
+                    DataSheetUrl = ds.DataSheetUrl,
+                    IsValid = ds.IsValid,
+                    LocalUrl = ds.LocalUrl,
+                    UpdatedAt = ds.UpdatedAt
+                });
+            }
+            return viewModel.ToList();
         }
 
         public DataSheets getDataSheet(int dataSheetId)
@@ -41,7 +57,7 @@ namespace ChemiClean.Repositories
             return dataSheets.Where(ds => ds.DataSheetId == dataSheetId).FirstOrDefault();
         }
 
-        public bool UpdateURLStatus(int dataSheetId, string url, bool status)
+        public bool UpdateURLStatus(int dataSheetId, string url, UrlState status)
         {
             var sheet = dataSheets.Select(d => d).Where(ds => ds.DataSheetId == dataSheetId).FirstOrDefault();
             if (sheet == null)
@@ -49,7 +65,7 @@ namespace ChemiClean.Repositories
             foreach (var dataSheet in dataSheets)
             {
                 if (dataSheet.DataSheetId == dataSheetId)
-                    dataSheet.IsValid = status;
+                    dataSheet.IsValid = (int) status;
             }
             return true;
         }
@@ -63,23 +79,22 @@ namespace ChemiClean.Repositories
             {
                 if(dataSheet.DataSheetId == dataSheetId)
                 {
-                    dataSheet.LocalURL = localURL;
+                    dataSheet.LocalUrl= localURL;
                     dataSheet.HashValue = hashValue;
                 }
             }
             return true;
         }
 
-        public bool IsHashExist(byte[] hashValue)
+     
+        public byte[] getHashValue(int dataSheetId)
         {
-            var result = dataSheets.Where(ds => ds.HashValue == hashValue).ToList();
-            if (result.Count > 0)
-                return true;
-            return false;
+            return dataSheets.Where(ds => ds.DataSheetId == dataSheetId).Select(ds => ds.HashValue).FirstOrDefault();
+
         }
 
-       
 
+        //-------------------------Not Mandatory--------------------------------------------
 
 
 
@@ -103,5 +118,7 @@ namespace ChemiClean.Repositories
                 .Distinct()
                 .FirstOrDefault();
         }
+
+     
     }
 }

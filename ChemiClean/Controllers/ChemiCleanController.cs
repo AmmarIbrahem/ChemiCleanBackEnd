@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using ChemiClean.Models;
@@ -64,10 +65,10 @@ namespace ChemiClean.Controllers
             }
             else
             {
-                //Url is not valid or 
+                //Url is not valid 
                 // update file status to invalid.
-                
-                repository.UpdateURLStatus(dataSheetId, sheetURL, false);
+                repository.UpdateURLStatus(dataSheetId, sheetURL, UrlState.Invalid);
+                // TODO -- Remove old hash value & Delete file if Exist 
                 return NotFound("URL doesn't exist");
             }
             //DB update trigger is made to record date 
@@ -131,29 +132,29 @@ namespace ChemiClean.Controllers
                     //Check avilability for file extension
                     if (contentType != null && MimeTypes.ContainsKey(contentType))
                     {
-                        var filePath = @$"{environment.WebRootPath}\{filename}{MimeTypes[contentType]}";
+                        var filePath = @$"{environment.WebRootPath}\Uploads\{filename}{MimeTypes[contentType]}";
                         using (var md5 = MD5.Create())
                         {
                             var hash = md5.ComputeHash(result);
                             //Check if file not exist locally or not up-to-date
-                            if (!repository.IsHashExist(hash))
+                            if(!hash.SequenceEqual(repository.getHashValue(dataSheetId)))
                             {
                                 //Write File to local destination.
                                 System.IO.File.WriteAllBytes(filePath, result);
                                 //Store local path & hash value
                                 repository.StoreFile(dataSheetId, filePath, hash);
                                 //Update status to valid
-                                repository.UpdateURLStatus(dataSheetId, path, true);
+                                repository.UpdateURLStatus(dataSheetId, path, UrlState.Valid);
                                 return Ok("Saved Successfully, File is Updated"); 
                             }
                         }
                         //Update status to valid
-                        repository.UpdateURLStatus(dataSheetId, path, true);
+                        repository.UpdateURLStatus(dataSheetId, path,  UrlState.Valid);
                         //File already exist locally and up-to-date
                         return Ok("File already Exist");
                     }
                     //Update status to invalid url
-                    repository.UpdateURLStatus(dataSheetId, path, false);
+                    repository.UpdateURLStatus(dataSheetId, path,  UrlState.Invalid);
                     //File extension is not supported
                     return BadRequest("File Extension not supported");
                 }
@@ -161,7 +162,7 @@ namespace ChemiClean.Controllers
                 {
                     Console.WriteLine(ex);
                     //update status to invalid url
-                    repository.UpdateURLStatus(dataSheetId, path, false);
+                    repository.UpdateURLStatus(dataSheetId, path,  UrlState.Invalid);
                     //delete file if exist or leave it for user
                     return NotFound("URL doesn't exist");
                 }
@@ -169,7 +170,8 @@ namespace ChemiClean.Controllers
           
         }
 
-//-------------------------------------------------------------------------------------------------
+        //-------------------------Not Mandatory--------------------------------------------
+
         // GET: api/suppliers
         [Route("/suppliers")]
         public ActionResult<List<Suppliers>> GetAllSuppliers()

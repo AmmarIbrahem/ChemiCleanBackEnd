@@ -1,6 +1,8 @@
+using ChemiClean.Models;
 using ChemiClean.Repositories;
 using NUnit.Framework;
 using System;
+using System.Security.Cryptography;
 
 namespace ChemiCleanTest
 {
@@ -41,18 +43,18 @@ namespace ChemiCleanTest
         }
 
         [Test]
-        [TestCase(1, "https://www.imaginary.Notfound.pdf", false)]
-        [TestCase(2, "http://www.flamol.dk/Flamol%20B.pdf", true)]
-        public void UpdateURLStatus_Return_True(int dataSheetId, string url, bool status)
+        [TestCase(1, "https://www.imaginary.Notfound.pdf", UrlState.Invalid)]
+        [TestCase(2, "http://www.flamol.dk/Flamol%20B.pdf", UrlState.Valid)]
+        public void UpdateURLStatus_Return_True(int dataSheetId, string url, UrlState status)
         {
             var result = mock.UpdateURLStatus(dataSheetId, url, status);
             Assert.AreEqual(true, result);
         }
         
         [Test]
-        [TestCase(3, "https://www.iminar.Notfound.pdf", false)]
-        [TestCase(4, "http://www.flamol.d/Flamol%20B.pdf", true)]
-        public void UpdateURLStatus_Return_False(int dataSheetId, string url, bool status)
+        [TestCase(3, "https://www.iminar.Notfound.pdf", UrlState.Invalid)]
+        [TestCase(4, "http://www.flamol.d/Flamol%20B.pdf", UrlState.Valid)]
+        public void UpdateURLStatus_Return_False(int dataSheetId, string url, UrlState status)
         {
             var result = mock.UpdateURLStatus(dataSheetId, url, status);
             Assert.AreEqual(false, result);
@@ -76,14 +78,25 @@ namespace ChemiCleanTest
         }
 
         [Test]
-        [TestCase(new byte[] { 80 })]
-        public void IsHashExist_Return_False(byte[] hashValue)
+        [TestCase(1)]
+        public void getHashValue_Return_Value(int dataSheetId)
         {
-            var result = mock.IsHashExist(hashValue);
-            Assert.AreEqual(false, result);
+
+            var result = mock.getHashValue(dataSheetId);
+            Assert.AreEqual(MD5.Create().ComputeHash(new byte[] { 80 }), result);
         }
-        
-        
+
+        [Test]
+        [TestCase(2)]
+        [TestCase(3)]
+        public void getHashValue_Return_Null(int dataSheetId)
+        {
+
+            var result = mock.getHashValue(dataSheetId);
+            Assert.IsNull(result);
+        }
+        //-------------------------Not Mandatory--------------------------------------------
+
         [Test]
         public void GetAllSuppliers_Return_List_Size_2()
         {

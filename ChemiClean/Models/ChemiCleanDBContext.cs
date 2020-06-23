@@ -25,6 +25,7 @@ namespace ChemiClean.Models
         {
             if (!optionsBuilder.IsConfigured)
             {
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
                 optionsBuilder.UseSqlServer("Server=.;Database=ChemiCleanDB;Trusted_Connection=True; User Id=sd40;password=123");
             }
         }
@@ -42,11 +43,19 @@ namespace ChemiClean.Models
                     .HasColumnName("DataSheetURL")
                     .HasMaxLength(300);
 
-                entity.Property(e => e.IsValid);
+                entity.Property(e => e.HashValue)
+                    .HasMaxLength(150)
+                    .IsFixedLength();
+
+                entity.Property(e => e.LocalUrl)
+                    .HasColumnName("LocalURL")
+                    .HasMaxLength(250);
 
                 entity.Property(e => e.ProductId).HasColumnName("ProductID");
 
                 entity.Property(e => e.SupplierId).HasColumnName("SupplierID");
+
+                entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
 
                 entity.Property(e => e.UserId).HasColumnName("UserID");
             });
