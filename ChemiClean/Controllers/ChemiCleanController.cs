@@ -70,7 +70,7 @@ namespace ChemiClean.Controllers
                 repository.UpdateURLStatus(dataSheetId, sheetURL, false);
                 return NotFound("URL doesn't exist");
             }
-
+            //DB update trigger is made to record date 
             
         }
 
